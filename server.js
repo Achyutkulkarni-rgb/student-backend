@@ -24,7 +24,6 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 // Order Schema
-// Order Schema
 const OrderSchema = new mongoose.Schema({
     username: String,
     items: [
@@ -38,28 +37,7 @@ const OrderSchema = new mongoose.Schema({
     grandTotal: Number,
     date: { type: Date, default: Date.now }
 });
-
 const Order = mongoose.model('Order', OrderSchema);
-
-// Buy Now API
-app.post('/order', async (req, res) => {
-    const { username, items, total, gst, grandTotal } = req.body;
-    try {
-        const newOrder = new Order({
-            username,
-            items,
-            total,
-            gst,
-            grandTotal
-        });
-        await newOrder.save();
-        res.send({ success: true, message: 'Order placed successfully!' });
-    } catch (error) {
-        console.error('Order Error:', error);
-        res.status(500).send({ success: false, message: 'Order failed.' });
-    }
-});
-
 
 // Signup API
 app.post('/signup', async (req, res) => {
@@ -96,26 +74,27 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Buy API - Save order to MongoDB
+// Order API
 app.post('/order', async (req, res) => {
     const { username, items, total, gst, grandTotal } = req.body;
     try {
-        const order = new Order({
+        const newOrder = new Order({
             username,
             items,
             total,
             gst,
             grandTotal
         });
-        await order.save();
-        res.send({ message: 'Order placed successfully!' });
+        await newOrder.save();
+        res.send({ success: true, message: 'Order placed successfully!' });
     } catch (error) {
         console.error('Order Error:', error);
-        res.status(500).send({ message: 'Failed to place order.' });
+        res.status(500).send({ success: false, message: 'Order failed.' });
     }
 });
 
-// Start server
-app.listen(5000, () => {
-    console.log('Backend running at http://localhost:5000');
+// ✅ Listen on correct port for Render
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Backend running on port ${PORT}`);
 });
