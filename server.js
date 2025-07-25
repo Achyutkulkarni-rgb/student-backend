@@ -36,6 +36,7 @@ const OrderSchema = new mongoose.Schema({
             price: Number,
         }
     ],
+    address: String,
     total: Number,
     gst: Number,
     grandTotal: Number,
@@ -86,27 +87,25 @@ app.post('/profile', async (req, res) => {
     }
 });
 
-router.post("/order", async (req, res) => {
-  try {
-    const { username, items, total, gst, grandTotal, address } = req.body;
-
-    const newOrder = new Order({
-      username,
-      items,
-      total,
-      gst,
-      grandTotal,
-      address, // ✅ save address
-      date: new Date(),
-    });
-
-    await newOrder.save();
-    res.status(201).json({ message: "Order placed successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to place order" });
-  }
+app.post('/order', async (req, res) => {
+    const { username, items, total, gst, grandTotal, address } = req.body; // ✅ Include address
+    try {
+        const newOrder = new Order({
+            username,
+            items,
+            total,
+            gst,
+            grandTotal,
+            address // ✅ Save address
+        });
+        await newOrder.save();
+        res.send({ success: true, message: 'Order placed successfully!' });
+    } catch (error) {
+        console.error('Order Error:', error);
+        res.status(500).send({ success: false, message: 'Order failed.' });
+    }
 });
+
 
 
 const PORT = process.env.PORT || 5000;
