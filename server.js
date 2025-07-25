@@ -20,6 +20,8 @@ mongoose.connect('mongodb+srv://achyutk574:QtCvkgBjz8ggRu2R@cluster0.ij0fg3x.mon
 const UserSchema = new mongoose.Schema({
     username: String,
     password: String,
+    name: String,
+    email: String
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -90,6 +92,26 @@ app.post('/order', async (req, res) => {
     } catch (error) {
         console.error('Order Error:', error);
         res.status(500).send({ success: false, message: 'Order failed.' });
+    }
+});
+
+// Profile Update API
+app.post('/profile', async (req, res) => {
+    const { username, name, email } = req.body;
+    try {
+        const user = await User.findOneAndUpdate(
+            { username },
+            { name, email },
+            { new: true }
+        );
+        if (user) {
+            res.send({ success: true, message: 'Profile updated', user });
+        } else {
+            res.send({ success: false, message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).send({ success: false, message: 'Profile update failed' });
     }
 });
 
