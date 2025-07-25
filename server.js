@@ -1,3 +1,5 @@
+// ========================= BACKEND (server.js) =========================
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -8,7 +10,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Connection
 mongoose.connect('mongodb+srv://achyutk574:QtCvkgBjz8ggRu2R@cluster0.ij0fg3x.mongodb.net/studentAuthDB?retryWrites=true&w=majority&appName=Cluster0', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -16,7 +17,6 @@ mongoose.connect('mongodb+srv://achyutk574:QtCvkgBjz8ggRu2R@cluster0.ij0fg3x.mon
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// User Schema
 const UserSchema = new mongoose.Schema({
     username: String,
     password: String,
@@ -25,9 +25,9 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-// Order Schema
 const OrderSchema = new mongoose.Schema({
     username: String,
+    address: String,
     items: [
         {
             name: String,
@@ -41,7 +41,6 @@ const OrderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model('Order', OrderSchema);
 
-// Signup API
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -55,7 +54,6 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-// Login API
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -63,7 +61,6 @@ app.post('/login', async (req, res) => {
         if (!user) {
             return res.send({ success: false, message: 'User not found.' });
         }
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
             res.send({ success: true, message: 'Login successful!' });
@@ -76,46 +73,40 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Order API
-app.post('/order', async (req, res) => {
-    const { username, items, total, gst, grandTotal } = req.body;
-    try {
-        const newOrder = new Order({
-            username,
-            items,
-            total,
-            gst,
-            grandTotal
-        });
-        await newOrder.save();
-        res.send({ success: true, message: 'Order placed successfully!' });
-    } catch (error) {
-        console.error('Order Error:', error);
-        res.status(500).send({ success: false, message: 'Order failed.' });
-    }
-});
-
-// Profile Update API
 app.post('/profile', async (req, res) => {
     const { username, name, email } = req.body;
     try {
-        const user = await User.findOneAndUpdate(
-            { username },
-            { name, email },
-            { new: true }
-        );
-        if (user) {
-            res.send({ success: true, message: 'Profile updated', user });
-        } else {
-            res.send({ success: false, message: 'User not found' });
-        }
+        await User.updateOne({ username }, { name, email });
+        res.send({ success: true, message: 'Profile updated!' });
     } catch (error) {
-        console.error('Profile update error:', error);
-        res.status(500).send({ success: false, message: 'Profile update failed' });
+        console.error('Profile Update Error:', error);
+        res.status(500).send({ success: false, message: 'Profile update failed.' });
     }
 });
 
-// ✅ Listen on correct port for Render
+router.post("/order", async (req, res) => {
+  try {
+    const { username, items, total, gst, grandTotal, address } = req.body;
+
+    const newOrder = new Order({
+      username,
+      items,
+      total,
+      gst,
+      grandTotal,
+      address, // ✅ save address
+      date: new Date(),
+    });
+
+    await newOrder.save();
+    res.status(201).json({ message: "Order placed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to place order" });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Backend running on port ${PORT}`);
